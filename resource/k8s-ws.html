@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="xterm.css" />
+    <script src="xterm.js"></script>
+    <script src="fit.js"></script>
+</head>
+<body>
+<div id="terminal" style="height: calc(100vh * 0.99)"></div>
+<script>
+
+    function getQueryVariable(variable) {
+        let query = window.location.search.substring(1);
+        let vars = query.split("&");
+        for (let i=0;i<vars.length;i++) {
+            let pair = vars[i].split("=");
+            if(pair[0] == variable){
+                return pair[1];
+            }
+        }
+        return(false);
+    }
+
+    // xterm配置自适应大小插件
+    Terminal.applyAddon(fit);
+    // 创建终端
+    let term = new Terminal();
+    term.open(document.getElementById('terminal'));
+    // 使用fit插件自适应terminal size
+    term.fit();
+    // 取得输入焦点
+    term.focus();
+
+    namespace = getQueryVariable("namespace");
+    pod = getQueryVariable("pod");
+    container = getQueryVariable("container");
+    console.log(namespace ,pod ,container);
+    if (namespace == false || pod == false || container == false) {
+        alert("Cannot get the pod!")
+    }
+    console.log(namespace ,pod ,container)
+    url = "ws://" + window.location.host + "/k8s-ws/connect?" + "namespace=" + namespace + "&pod=" + pod + "&container=" + container
+    console.log(url);
+
+    // 连接websocket
+    ws = new WebSocket(url);
+    ws.onopen = function(event) {
+        console.log("onopen")
+    }
+    ws.onclose = function(event) {
+        console.log("onclose")
+    }
+    ws.onmessage = function(event) {
+        // 服务端ssh输出, 写到web shell展示
+        term.write(event.data)
+    }
+    ws.onerror = function(event) {
+        console.log("onerror")
+    }
+
+    // 当浏览器窗口变化时, 重新适配终端
+    window.addEventListener("resize", function () {
+        term.fit()
+
+        // 把web终端的尺寸term.rows和term.cols发给服务端, 通知sshd调整输出宽度
+        let msg = {type: "resize", rows: term.rows, cols: term.cols}
+        ws.send(JSON.stringify(msg))
+    })
+
+    // 当向web终端敲入字符时候的回调
+    term.on('data', function(input) {
+        // 写给服务端, 由服务端发给container
+        let msg = {type: "input", input: input}
+        ws.send(JSON.stringify(msg))
+    })
+</script>
+</body>
+</html>
