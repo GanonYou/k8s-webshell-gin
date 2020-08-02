@@ -20,15 +20,14 @@ Golang implements the webshell function of logging in k8s to specify pod content
 ![image](https://github.com/GanonYou/k8s-webshell-gin/blob/master/k8s-webshell%20.jpg)
 
 ## Quick Start
-1. Change your_ Replace k8s.conf with your own kubeconfig. If it is a yaml file, copy the contents into. Conf directly
-2. Modify init_ client.go Medium ioutil.ReadFile ("./YOUR_ K8s. Conf ")
-3. Make sure your kubeconfig is correct and you can get the pod through kubectl get pod in the terminal
+1. Replace YOUR_K8S.conf with your own kubeconfig. If it is a yaml file, copy the contents into .conf file directly
+2. Modify init_client.go with correct .conf name
+3. Make sure your kubeconfig can work and you can get the pod through 'kubectl get pod' in the terminal
 
 ## Process
-
 - Web side get request, server side response front-end resources
 - Webshell initiates a websocket request and the server upgrades the connection
-- K8s / client go establishes SSH long connection with container, and realizes reading and writing method of ptyhandle interface through websocket connection.
+- K8s/client-go establishes SSH long connection with container, and realizes reading and writing method of PtyHandle interface through websocket connection.
 - Use the middleware in the group for authentication
 
 The specific process is shown in the following figure:
